@@ -4,8 +4,8 @@ import sys
 
 
 def main():
-    global TRACE_WORD_PROCESSED
-    TRACE_WORD_PROCESSED = True
+    global trace_word_processed
+    trace_word_processed = True
     global FIRST_LETTER_INDEX
     FIRST_LETTER_INDEX = 2
     global word_parsed
@@ -13,10 +13,12 @@ def main():
     word_parsed = generate_array()
 
     if len(sys.argv) > 1:
-        process_args()
-        exit(0)
+        if sys.argv[-1] == "debug":
+            trace_word_processed = True
+            process_args()
+            exit(0)
     else:
-        if TRACE_WORD_PROCESSED:
+        if trace_word_processed:
             debug_word()
             exit(0)
 

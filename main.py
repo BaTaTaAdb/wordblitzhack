@@ -1,53 +1,40 @@
 from process import generate_array
 import numpy as np
-import os
+import sys
 
 
 def main():
+    global TRACE_WORD_PROCESSED
+    TRACE_WORD_PROCESSED = True
     global FIRST_LETTER_INDEX
     FIRST_LETTER_INDEX = 2
     global word_parsed
-    """    global processed_path
-    processed_path = np.zeros((20, 4, 4), np.int8)"""
-    """global found_letters
-    found_letters = np.chararray((20, 20))"""
-    # print(found_letters)
+
     word_parsed = generate_array()
+
+    if len(sys.argv) > 1:
+        process_args()
+        exit(0)
+    else:
+        if TRACE_WORD_PROCESSED:
+            debug_word()
+            exit(0)
+
     """board_raw = [["a", "e", "u", "d"], ["o", "b", "i", "l"],
                  ["u", "s", "a", "l"], ["t", "r", "c", "t"]]"""
-    board_raw = [["a", "m", "a", "f"], ["b", "e", "a", "r"],
-                 ["t", "a", "p", "u"], ["g", "n", "i", "s"]]
+    """board_raw = [["a", "m", "a", "f"], ["b", "e", "a", "r"],
+                 ["t", "a", "p", "u"], ["g", "n", "i", "s"]]"""
     """board_raw = [["a", "b", "c", "d"], ["e", "f", "g", "h"],
                  ["i", "j", "k", "l"], ["m", "n", "o", "p"]]"""
-
-    # Debug
-    # curr = 2
-    # print("\n\nLevel 1 State:[", curr, "]:\n==================\n",
-    #       word_parsed[abs(curr)], "\n")
-
-    # Letters "b"
-    # curr = word_parsed[abs(curr), ord("b") - 97]
-    # print("\n\nLevel 2 [b] State:[", curr,
-    #       "]:\n==================\n", word_parsed[abs(curr)], "\n")
-
-    # Letters "be"
-    # curr = word_parsed[abs(curr), ord("e") - 97]
-    # print("\n\nLevel 3 [be] State:[", curr,
-    #       "]:\n==================\n", word_parsed[abs(curr)], "\n")
-
-    # Letters "bea"
-    # curr = word_parsed[abs(curr), ord("a") - 97]
-    # print("\n\nLevel 4 [bea] State:[", curr,
-    #       "]:\n==================\n", word_parsed[abs(curr)], "\n")
-
-    # Letters "bear"
-    # curr = word_parsed[abs(curr), ord("r") - 97]
-    # print("\n\nLevel 4 [bear] State:[", curr,
-    #       "]:\n==================\n", word_parsed[abs(curr)], "\n")
+    board_raw = [["p", "s", "m", "i"], ["a", "d", "o", "d"],
+                 ["s", "i", "r", "t"], ["a", "s", "a", "s"]]
 
     board = board_pre_process(board_raw)
+    print()
     board_processer(board)
     words = words_found
+    print(words, "\n\n\n")
+
     words_processed = [x for x in words if any(
         ("a" in x, "e" in x, "i" in x, "o" in x, "u" in x)) and len(x) > 1]
     print("\n", sorted(
@@ -157,6 +144,30 @@ def find_words(board, processed_path, letters, start_y, start_x, cur_state, leve
         cur_proc_path[start_y][start_x] = 0
 
         #print("\nPRINT AFTER", level, found_letters)
+
+
+def trace_word(word):
+    curr = 2
+    for i in range(len(word)):
+        print(f"\nWord: {word[0:i+1]}\nLevel {i} State:[", curr, "]:\n==================\n",
+              word_parsed[abs(curr)], "\n")
+        curr = word_parsed[abs(curr), ord(word[i]) - 97]
+
+
+def process_args():
+    if sys.argv[1] == "debug":
+        if len(sys.argv) == 3:
+            debug_word(sys.argv[-1])
+        else:
+            debug_word()
+
+
+def debug_word(word=""):
+    if word == "":
+        word_to_debug = input("Enter word to debug: ")
+        trace_word(word_to_debug)
+    else:
+        trace_word(word)
 
 
 if __name__ == "__main__":

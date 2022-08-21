@@ -18,6 +18,25 @@ def main():
                  ["t", "a", "p", "u"], ["g", "n", "i", "s"]]
     """board_raw = [["a", "b", "c", "d"], ["e", "f", "g", "h"],
                  ["i", "j", "k", "l"], ["m", "n", "o", "p"]]"""
+                 
+    # Debug
+    curr=2
+    print("\n\nLevel 1 State:[", curr, ]:\n==================\n", word_parsed[abs(curr)],"\n")
+    
+    # Letters "b"
+    curr = word_parsed[abs(curr), ord("b" - 97)]
+    print("\n\nLevel 2 [b] State:[", curr, ]:\n==================\n", word_parsed[abs(curr)],"\n")
+
+    
+    # Letters "be"
+    curr = word_parsed[abs(curr), ord("e" - 97)]
+    print("\n\nLevel 3 [be]:\n==================\n", word_parsed[abs(curr)],"\n")
+                 
+     # Letters "bea"
+    curr = word_parsed[abs(curr), ord("a" - 97)]
+    print("\n\nLevel 4 [bea]:\n==================\n", word_parsed[abs(curr)],"\n")                
+                
+                 
     board = board_pre_process(board_raw)
     board_processer(board)
     print(words_found)

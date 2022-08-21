@@ -31,18 +31,17 @@ def check_letter_in_word(state, letter_index):
 
 def board_processer(board):
     global words_found
-    processed_path = np.zeros((len(board), len(board)), dtype=np.int8)
     words_found = []
     found_letters_start = []
     board_size = len(board)
     for y in range(board_size):
         for x in range(board_size):
-            processed_path[:] = 0
+            processed_path = np.zeros((20, 4, 4), np.int8)
             found_letters_start = []
             if y == 1 and x == 0:
                 print(y, x)
             print("\n\n", "Main letter:[", chr(
-                board[y][x] + 97), "]   Y=[", y, "] X=[", x, "]", )
+                board[y][x] + 97), "]   Y=[", y, "] X=[", x, "]", processed_path)
             print("==================================================")
             find_words(board, found_letters_start,
                        y, x, FIRST_LETTER_INDEX, 0)

@@ -47,8 +47,11 @@ def main():
 
     board = board_pre_process(board_raw)
     board_processer(board)
-
-    print("\n", sorted(list(dict.fromkeys(sorted(words_found))), key=len, reverse=True))
+    words = words_found
+    words_processed = [x for x in words if any(
+        ("a" in x, "e" in x, "i" in x, "o" in x, "u" in x)) and len(x) > 1]
+    print("\n", sorted(
+        list(dict.fromkeys(sorted(words_processed))), key=len, reverse=True))
 
 
 def check_letter_in_word(state, letter_index):

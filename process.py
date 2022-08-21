@@ -6,7 +6,7 @@ def main():
     global next_free_elem
     global word_parsed
     next_free_elem = 3
-    d2 = (700_000, 27)
+    d2 = (800_000, 27)
     word_parsed = np.zeros(d2, dtype=np.int32)
     eng_dict = load_words()
     parse_words(eng_dict)
@@ -28,8 +28,11 @@ def word_processer(word):
         stored_value = word_parsed[cur_elem][letter_index]
         #print(f"index: {index}. len_word = {len_word}. letter: {letter}")
         if index < len_word:
-            if stored_value == 0:
-                word_parsed[cur_elem][letter_index] = next_free_elem
+            if stored_value == 0 or stored_value == -1:
+                if stored_value == -1:
+                    word_parsed[cur_elem][letter_index] = -next_free_elem
+                else:
+                    word_parsed[cur_elem][letter_index] = next_free_elem
                 cur_elem = next_free_elem
                 next_free_elem += 1
             else:

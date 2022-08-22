@@ -33,18 +33,20 @@ def get_all_words(board_raw):
             exit(0)
 
     board = board_pre_process(board_raw)
-    print()
+    # print()
     board_processer(board)
     words, only_words = words_found, []
     # print(words_found, "\n\n\n")
     for i in range(len(words)):
         only_words.append(words[i][0])
     # print(only_words)
-    words_processed = [x for x in only_words if any(
+    words_only_processed = [x for x in only_words if any(
         ("a" in x, "e" in x, "i" in x, "o" in x, "u" in x)) and len(x) > 1]
-    print("\n", sorted(
-        list(dict.fromkeys(sorted(words_processed))), key=len, reverse=True))
-    return words_found, words_processed
+    # print("\n", sorted(
+    #    list(dict.fromkeys(sorted(words_only_processed))), key=len, reverse=True))
+    words_found_processed = [x for x in words if any(
+        ("a" in x[0], "e" in x[0], "i" in x[0], "o" in x[0], "u" in x[0])) and len(x[0]) > 1]
+    return words_found_processed, words_only_processed
 
 
 def check_letter_in_word(state, letter_index):
@@ -64,7 +66,7 @@ def board_processer(board):
     words_found = []
     found_letters_start = []
     board_size = len(board)
-    print("Loading.", end="")
+    print("Processing.", end="")
 
     for y in range(board_size):
         for x in range(board_size):

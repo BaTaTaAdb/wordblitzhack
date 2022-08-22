@@ -10,8 +10,8 @@ class Screen:
             pos1[0] if pos1[0] < pos2[0] else pos2[0],
             pos1[1] if pos1[1] < pos2[1] else pos2[1]
         )
-        print(f"Point MIN: {str(self.posminxy)}")
-        print(f"Point MAX: {str(self.posmaxxy)}")
+        #print(f"Point MIN: {str(self.posminxy)}")
+        #print(f"Point MAX: {str(self.posmaxxy)}")
 
     def get_top_box(self):
         return self.posminxy[1]

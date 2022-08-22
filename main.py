@@ -1,176 +1,110 @@
-from process import generate_array
+import pyautogui
+import time
+import keyboard
+import mss
+import mss.tools
 import numpy as np
-import sys
+import cv2
+import pytesseract
+from word_finder import get_all_words
+from screen import Screen
+
+global BOARD_SIZE
+BOARD_SIZE = 4
+ELIM_COLOR_MIN = np.array((0, 0, 50))  # BGR
+ELIM_COLOR_MAX = np.array((100, 100, 255))
+
+screen_coord = (733, 23, 1186, 1031)
+dif = 106
+positions = [[(779, 477), (824, 521)], [(885, 478), (926, 520)], [(986, 474), (1030, 521)], [(1097, 477), (1134, 522)], [(781, 583), (826, 626)], [(883, 579), (930, 630)], [(990, 579), (1035, 631)], [(1095, 584), (1136, 626)], [
+    (787, 686), (822, 728)], [(884, 686), (930, 733)], [(992, 688), (1032, 730)], [(1094, 686), (1141, 730)], [(779, 792), (824, 835)], [(884, 789), (930, 844)], [(990, 785), (1033, 835)], [(1086, 788), (1143, 833)]]
+"""positions = [[(783, 478), (1130, 517)], [(783, 584), (1130, 621)],
+             [(783, 690), (1130, 725)], [(783, 794), (1130, 831)]]"""
+"""positions = [[(786, 478), (824, 520)], [(783, 584), (1130, 621)],
+             [(783, 690), (1130, 725)], [(783, 794), (1130, 831)]]"""
+results_real_time, all_letters = [], []
+
+mon = []
+for i in positions:
+    _screen = Screen(pyautogui.size(), i[0], i[1])
+    _mon = _screen.get_mon()
+    mon.append(_mon)
+print(mon)
+
+# record current mouse location and store in list of tuples (x,y)
+coords = []
+pos2 = None
 
 
-def main():
-    global trace_word_processed
-    trace_word_processed = True
-    global FIRST_LETTER_INDEX
-    FIRST_LETTER_INDEX = 2
-    global word_parsed
-
-    word_parsed = generate_array()
-
-    if len(sys.argv) > 1:
-        if sys.argv[-1] == "debug":
-            trace_word_processed = True
-            process_args()
-            exit(0)
-    else:
-        if trace_word_processed:
-            debug_word()
-            exit(0)
-
-    """board_raw = [["a", "e", "u", "d"], ["o", "b", "i", "l"],
-                 ["u", "s", "a", "l"], ["t", "r", "c", "t"]]"""
-    """board_raw = [["a", "m", "a", "f"], ["b", "e", "a", "r"],
-                 ["t", "a", "p", "u"], ["g", "n", "i", "s"]]"""
-    """board_raw = [["a", "b", "c", "d"], ["e", "f", "g", "h"],
-                 ["i", "j", "k", "l"], ["m", "n", "o", "p"]]"""
-    board_raw = [["p", "s", "m", "i"], ["a", "d", "o", "d"],
-                 ["s", "i", "r", "t"], ["a", "s", "a", "s"]]
-
-    board = board_pre_process(board_raw)
-    print()
-    board_processer(board)
-    words = words_found
-    print(words, "\n\n\n")
-
-    words_processed = [x for x in words if any(
-        ("a" in x, "e" in x, "i" in x, "o" in x, "u" in x)) and len(x) > 1]
-    print("\n", sorted(
-        list(dict.fromkeys(sorted(words_processed))), key=len, reverse=True))
+def get_coords():
+    while True:
+        while True:
+            if keyboard.read_key() == "shift":
+                if pos2 == None:
+                    pos1 = pyautogui.position()
+                    print(f"Selected Pos1: {str(pos1)}")
+                    pos2 = ()
+                    time.sleep(0.5)
+                else:
+                    pos2 = pyautogui.position()
+                    print(f"Selected Pos2: {str(pos2)}")
+                    time.sleep(0.5)
+                    break
+            elif keyboard.read_key() == "q":
+                print(coords)
+                exit(0)
+        coords.append([(pos1.x, pos1.y), (pos2.x, pos2.y)])
+        pos1, pos2 = None, None
 
 
-def check_letter_in_word(state, letter_index):
-    stored_value = word_parsed[state][letter_index]
-
-    # print("stored_value=[", stored_value, "]")
-
-    # stop_process = stored_value in (-1, 0)
-    stop_process = (stored_value == -1 or stored_value == 0)
-    end_word = stored_value < 0
-    next_state = abs(stored_value)
-    return stop_process, end_word, next_state
-
-
-def board_processer(board):
-    global words_found
-    words_found = []
-    found_letters_start = []
-    board_size = len(board)
-    print("Loading.", end="")
-
-    for y in range(board_size):
-        for x in range(board_size):
-            print(".", end="")
-            processed_path = np.zeros((board_size, board_size), np.int8)
-            found_letters_start = []
-            # if y == 1 and x == 0:
-            #     print(y, x)
-            # print("\n\n", "Main letter:[", chr(
-            #     board[y][x] + 97), "]   Y=[", y, "] X=[", x, "]\n", processed_path)
-            # print("==================================================")
-            find_words(board, processed_path, found_letters_start,
-                       y, x, FIRST_LETTER_INDEX, 0)
+def clear_letters(letters):
+    board_raw, board_raw_row = [], []
+    for j in range(BOARD_SIZE**2):
+        board_raw_row.append(letters[j].replace(
+            "|", "I").replace("\n", "").lower()[-1])
+        print(len(board_raw_row))
+        if len(board_raw_row) == BOARD_SIZE:
+            board_raw.append(board_raw_row)
+            board_raw_row = []
+    return letters, board_raw
 
 
-def board_pre_process(board_raw):
-    board = np.zeros((len(board_raw), len(board_raw)), dtype=np.int32)
-    # print(board)
-    for i in range(len(board)):
-        for j in range(len(board)):
-            board[i][j] = ord(board_raw[i][j]) - 97
-    return board
+for i in range(BOARD_SIZE**2):
+    results_are_consistant = [False * 5]
+    results_real_time = []
+    with mss.mss() as sct:
+        while True:
+            im = np.asarray(sct.grab(mon[i]))
+            """im = np.asarray(
+                sct.grab({"left": 0, "top": 0, "height": 1920, "width": 1080}))"""
+            grayImage = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+            (thresh, blackAndWhiteImage) = cv2.threshold(
+                grayImage, 127, 255, cv2.THRESH_BINARY)
+
+            text = pytesseract.image_to_string(
+                blackAndWhiteImage, config="--psm 10")
+            results_real_time.append(text)
+            # print(text)
+            # print(results_real_time)
+
+            #cv2.imshow('Image', im)
+            cv2.imshow("BLACKANDWHITE", blackAndWhiteImage)
+            # Press "q" to quit
+            if cv2.waitKey(2) & 0xFF == ord('q'):
+                cv2.destroyAllWindows()
+                exit()
+            # print(text)
+            if len(results_real_time) >= 2:
+                print(all(results_are_consistant[-5:-1]))
+                results_real_time = results_real_time[-5:-1]
+                for i in range(len(results_real_time)-1):
+                    results_are_consistant.append(
+                        results_real_time[i] == results_real_time[i+1])
+                if all(results_are_consistant[-5:-1]):
+                    all_letters.append(results_real_time[-1])
+                    break
 
 
-def find_words(board, processed_path, letters, start_y, start_x, cur_state, level):
-    cur_proc_path = processed_path
-    found_letters = []
-    found_letters = letters
-
-    # Signal this letter position was processed
-    # processed_path[start_y][start_x] = 1
-
-    level += 1
-
-    # Debug
-    # if abs(cur_state) == 1089:
-    #     print(word_parsed[abs(cur_state)])
-    #
-    # if level == 4 and start_y == 1 and start_x == 3:
-    #     print("Test [R]")
-
-    # print(processed_path)
-    found_letters.append(chr(board[start_y][start_x] + 97))
-
-    stop_process, end_word, next_state = check_letter_in_word(
-        cur_state, board[start_y][start_x])
-
-    # stop_process = (level == 4)
-    # end_word = (level == 4)
-    # next_state = 999
-
-    # print(stop_process, end_word)
-
-    # print("     [", chr(board[start_y][start_x] + 97), "]  ",
-    #       stop_process, end_word, next_state, level, "Found=", found_letters, "\n")
-
-    if end_word:
-        current_word = ""
-        for i in found_letters:
-            current_word += i
-        words_found.append(current_word)
-
-    if stop_process:
-        # print("  --Return")
-        return
-
-    cur_proc_path[start_y][start_x] = 1
-
-    for delta_y in (-1, 0, 1):
-        for delta_x in (-1, 0, 1):
-            current_y = start_y + delta_y
-            current_x = start_x + delta_x
-
-            if (current_y >= 0 and current_x >= 0 and current_y < len(board) and current_x < len(board)):
-                # print("Y=[", current_y, "] X=[", current_x,
-                #       "] Dy=[", delta_y, "] Dx=[", delta_x, "] Flag:", processed_path[current_y][current_x])
-                if processed_path[current_y][current_x] == 0:
-                    #print("\n\n+++++++++\nPRINT BEFORE", level, found_letters)
-                    find_words(board, cur_proc_path, found_letters,
-                               current_y, current_x, next_state, level)
-                    found_letters.pop(-1)
-    if level != 1:
-        cur_proc_path[start_y][start_x] = 0
-
-        #print("\nPRINT AFTER", level, found_letters)
-
-
-def trace_word(word):
-    curr = 2
-    for i in range(len(word)):
-        print(f"\nWord: {word[0:i+1]}\nLevel {i} State:[", curr, "]:\n==================\n",
-              word_parsed[abs(curr)], "\n")
-        curr = word_parsed[abs(curr), ord(word[i]) - 97]
-
-
-def process_args():
-    if sys.argv[1] == "debug":
-        if len(sys.argv) == 3:
-            debug_word(sys.argv[-1])
-        else:
-            debug_word()
-
-
-def debug_word(word=""):
-    if word == "":
-        word_to_debug = input("Enter word to debug: ")
-        trace_word(word_to_debug)
-    else:
-        trace_word(word)
-
-
-if __name__ == "__main__":
-    main()
+letters, board_raw = clear_letters(all_letters)
+print(letters, "\n\n\n", board_raw)
+words = get_all_words(board_raw)

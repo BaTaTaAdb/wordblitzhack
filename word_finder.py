@@ -194,4 +194,5 @@ def debug_word(word=""):
 
 
 if __name__ == "__main__":
-    main()
+    get_all_words([["a", "e", "u", "d"], ["o", "b", "i", "l"],
+                   ["u", "s", "a", "l"], ["t", "r", "c", "t"]])

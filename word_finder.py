@@ -44,7 +44,7 @@ def get_all_words(board_raw):
         ("a" in x, "e" in x, "i" in x, "o" in x, "u" in x)) and len(x) > 1]
     print("\n", sorted(
         list(dict.fromkeys(sorted(words_processed))), key=len, reverse=True))
-    return words_found
+    return words_found, words_processed
 
 
 def check_letter_in_word(state, letter_index):

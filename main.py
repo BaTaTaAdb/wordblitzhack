@@ -73,38 +73,38 @@ for i in range(BOARD_SIZE**2):
     results_are_consistant = [False * 5]
     results_real_time = []
     with mss.mss() as sct:
-        while True:
-            im = np.asarray(sct.grab(mon[i]))
-            """im = np.asarray(
-                sct.grab({"left": 0, "top": 0, "height": 1920, "width": 1080}))"""
-            grayImage = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-            (thresh, blackAndWhiteImage) = cv2.threshold(
-                grayImage, 127, 255, cv2.THRESH_BINARY)
+        im = np.asarray(sct.grab(mon[i]))
+        """im = np.asarray(
+            sct.grab({"left": 0, "top": 0, "height": 1920, "width": 1080}))"""
+        grayImage = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+        (thresh, blackAndWhiteImage) = cv2.threshold(
+            grayImage, 127, 255, cv2.THRESH_BINARY)
 
-            text = pytesseract.image_to_string(
-                blackAndWhiteImage, config="--psm 10")
-            results_real_time.append(text)
-            # print(text)
-            # print(results_real_time)
+        results_real_time.append(pytesseract.image_to_string(
+            blackAndWhiteImage, config="--psm 10"))
+        # print(text)
+        # print(results_real_time)
 
-            #cv2.imshow('Image', im)
-            cv2.imshow("BLACKANDWHITE", blackAndWhiteImage)
-            # Press "q" to quit
-            if cv2.waitKey(2) & 0xFF == ord('q'):
-                cv2.destroyAllWindows()
-                exit()
-            # print(text)
-            if len(results_real_time) >= 2:
-                print(all(results_are_consistant[-5:-1]))
-                results_real_time = results_real_time[-5:-1]
-                for i in range(len(results_real_time)-1):
-                    results_are_consistant.append(
-                        results_real_time[i] == results_real_time[i+1])
-                if all(results_are_consistant[-5:-1]):
-                    all_letters.append(results_real_time[-1])
-                    break
+        #cv2.imshow('Image', im)
+        cv2.imshow("BLACKANDWHITE", blackAndWhiteImage)
+        # Press "q" to quit
+        """if cv2.waitKey(2) & 0xFF == ord('q'):
+            cv2.destroyAllWindows()
+            exit()"""
+        # print(text)
+        """if len(results_real_time) >= 2:
+            print(all(results_are_consistant[-5:-1]))
+            results_real_time = results_real_time[-5:-1]
+            for i in range(len(results_real_time)-1):
+                results_are_consistant.append(
+                    results_real_time[i] == results_real_time[i+1])
+            if all(results_are_consistant[-5:-1]):
+                all_letters.append(results_real_time[-1])
+                break"""
+        all_letters.append(results_real_time[-1])
 
 
 letters, board_raw = clear_letters(all_letters)
 print(letters, "\n\n\n", board_raw)
-words = get_all_words(board_raw)
+words, words_processed = get_all_words(board_raw)
+print(words_processed)

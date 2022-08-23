@@ -9,12 +9,13 @@ import pytesseract
 from word_finder import get_all_words
 from screen import Screen
 import psutil
+import os
 
 
 global BOARD_SIZE
 BOARD_SIZE = 4
 
-#dif = 106
+# dif = 106
 positions = [[(779, 477), (824, 521)], [(885, 478), (926, 520)], [(986, 474), (1030, 521)], [(1097, 477), (1134, 522)], [(781, 583), (826, 626)], [(883, 579), (930, 630)], [(990, 579), (1035, 631)], [(1095, 584), (1136, 626)], [
     (787, 686), (822, 728)], [(884, 686), (930, 733)], [(992, 688), (1032, 730)], [(1094, 686), (1141, 730)], [(779, 792), (824, 835)], [(884, 789), (930, 844)], [(990, 785), (1033, 835)], [(1086, 788), (1143, 833)]]
 results_real_time, all_letters = [], []
@@ -88,6 +89,31 @@ def checkIfProcessRunning(processName):
             pass
     return False
 
+
+print("Checking if adb is running:", end=" ")
+if checkIfProcessRunning("adb.exe"):
+    print("Online.")
+else:
+    old_dir = os.getcwd()
+    print("Offline\n Starting adb...")
+    os.chdir("scrcpy-win64-v1.24")
+    if os.system('cscript scrcpy-noconsole.vbs') == 0:
+        print("scrcpy and adb started successfully.")
+    else:
+        print("couldn't start scrcpy nor adb. Please try again.")
+        exit(-1)
+    os.chdir(old_dir)
+
+while not checkIfProcessRunning("scrcpy.exe"):
+    time.sleep(0.5)
+print("scrcpy started... initiating letters scan on input.")
+print("  => Press shift to start")
+
+while True:
+    if keyboard.read_key() == "shift":
+        break
+    elif keyboard.read_key() == "q":
+        exit(0)
 
 print("Finding letters.", end="")
 for i in range(BOARD_SIZE**2):

@@ -22135,6 +22135,7 @@ astomous
 astond
 astone
 astoned
+astones
 astony
 astonied
 astonies
@@ -28766,6 +28767,7 @@ bassariscus
 bassarisk
 basses
 basset
+bassett
 basseted
 basseting
 bassetite

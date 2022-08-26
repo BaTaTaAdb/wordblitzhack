@@ -10,18 +10,20 @@ from word_finder import get_all_words
 from screen import Screen
 import psutil
 import os
+import subprocess
 
+SERIAL = "42a91663"
 
 global BOARD_SIZE
 BOARD_SIZE = 4
 
 # dif = 106
-positions = [[(779, 477), (824, 521)], [(885, 478), (926, 520)], [(986, 474), (1030, 521)], [(1097, 477), (1134, 522)], [(781, 583), (826, 626)], [(883, 579), (930, 630)], [(990, 579), (1035, 631)], [(1095, 584), (1136, 626)], [
+positions_real = [[(779, 477), (824, 521)], [(885, 478), (926, 520)], [(986, 474), (1030, 521)], [(1097, 477), (1134, 522)], [(781, 583), (826, 626)], [(883, 579), (930, 630)], [(990, 579), (1035, 631)], [(1095, 584), (1136, 626)], [
     (787, 686), (822, 728)], [(884, 686), (930, 733)], [(992, 688), (1032, 730)], [(1094, 686), (1141, 730)], [(779, 792), (824, 835)], [(884, 789), (930, 844)], [(990, 785), (1033, 835)], [(1086, 788), (1143, 833)]]
 results_real_time, all_letters = [], []
 screen_coords = []
 screen_coords_row = []
-for i in positions:
+for i in positions_real:
     screen_coords_row.append(
         ((i[0][0] + i[1][0]) // 2, (i[0][1] + i[1][1]) // 2))
     # print(screen_coords_row)
@@ -32,7 +34,7 @@ for i in positions:
 # print(screen_coords)
 
 mon = []
-for i in positions:
+for i in positions_real:
     _screen = Screen(pyautogui.size(), i[0], i[1])
     _mon = _screen.get_mon()
     mon.append(_mon)
@@ -68,7 +70,7 @@ def clear_letters(letters):
     board_raw, board_raw_row = [], []
     for j in range(BOARD_SIZE**2):
         board_raw_row.append(letters[j].replace(
-            "|", "I").replace("\n", "").replace("0", "o").lower()[-1])
+            "|", "I").replace("\n", "").replace("0", "o").replace(")", "s").replace("4", "x").lower()[-1])
         if len(board_raw_row) == BOARD_SIZE:
             board_raw.append(board_raw_row)
             board_raw_row = []
@@ -90,14 +92,15 @@ def checkIfProcessRunning(processName):
     return False
 
 
-print("Checking if adb is running:", end=" ")
-if checkIfProcessRunning("adb.exe"):
+print("Checking if scrcpy is running:", end=" ")
+if checkIfProcessRunning("scrcpy.exe"):
     print("Online.")
 else:
     old_dir = os.getcwd()
     print("Offline\n Starting adb...")
     os.chdir("scrcpy-win64-v1.24")
-    if os.system('cscript scrcpy-noconsole.vbs') == 0:
+    os.system("taskkill /f /im adb.exe")
+    if os.system(f'cscript scrcpy-noconsole.vbs -s {SERIAL}') == 0:
         print("scrcpy and adb started successfully.")
     else:
         print("couldn't start scrcpy nor adb. Please try again.")
@@ -125,6 +128,7 @@ for i in range(BOARD_SIZE**2):
             grayImage, 127, 255, cv2.THRESH_BINARY)
         all_letters.append(pytesseract.image_to_string(
             blackAndWhiteImage, config="--psm 10"))
+print(all_letters)
 if len(all_letters) != BOARD_SIZE ** 2:
     print("ERROR: COULDN'T FIND LETTERS")
     exit()
@@ -140,23 +144,23 @@ for i in words_found_dupped:
         words_found.append(i)
         check_val.add(i[0])
 words_found.sort(key=lambda a: len(a[0]), reverse=True)
-# print(words_found)
+print()
 
 pyautogui.move(960, 540)
 # time.sleep(1)
 for word in words_found:
     print(f"Inputing:  {word}")
     # time.sleep(5)
+    first_down = True
     for coords in word[1:]:
         for coord in coords:
             coords_x, coords_y = screen_coords[coord[0]][coord[1]]
-            print(coords_x, coords_y)
+            #print(coords_x, coords_y)
             pyautogui.moveTo(coords_x, coords_y)
-            pyautogui.mouseDown()
-            print(coord)
-
-        """if keyboard.read_key() == "shift":
-            exit()
-        else:"""
+            if first_down:
+                pyautogui.mouseDown()
+            # pyautogui.mouseDown()
         pyautogui.mouseUp()
-        time.sleep(0.7)
+        # time.sleep(0.7)
+        # time.sleep(0.01)
+    first_down = False

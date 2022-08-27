@@ -19,8 +19,11 @@ from datetime import datetime, timedelta
 global CLICK_PAUSE_BASE_MS, CLICK_PAUSE_DELTA_MS
 CLICK_PAUSE_BASE_MS = 32
 CLICK_PAUSE_DELTA_MS = 10
+TIME_BETWEEN_WORDS_SEC = 0.07
 
 OP_MODE = False
+if OP_MODE:
+    pyautogui.PAUSE = 0.016
 
 SERIAL = "42a91663"
 round_time = timedelta(seconds=76)
@@ -33,8 +36,9 @@ BOARD_SIZE = 4
 
 
 def random_pause_sec():
-    pyautogui.PAUSE = (CLICK_PAUSE_BASE_MS +
-                       rand.randint(-CLICK_PAUSE_DELTA_MS//2, CLICK_PAUSE_DELTA_MS//2))/1000
+    if not OP_MODE:
+        pyautogui.PAUSE = (CLICK_PAUSE_BASE_MS +
+                           rand.randint(-CLICK_PAUSE_DELTA_MS//2, CLICK_PAUSE_DELTA_MS//2))/1000
 
 
 def clear_letters(letters):
@@ -78,7 +82,7 @@ for i in positions_real:
     mon.append(_mon)
 
 while True:
-    results_real_time, all_letters = [], []
+    results_real_time, all_letters, word_count = [], [], 0
     print("Checking if scrcpy is running:", end=" ")
     if checkIfProcessRunning("scrcpy.exe"):
         print("Online.")
@@ -107,6 +111,7 @@ while True:
     print("  => Press shift to start")
     while True:
         if keyboard.read_key() == "shift":
+            print("Starting!!!")
             end_time = datetime.now()+round_time
             board.write_pic()
             break
@@ -123,6 +128,8 @@ while True:
                 grayImage, 127, 255, cv2.THRESH_BINARY)
             all_letters.append(pytesseract.image_to_string(
                 blackAndWhiteImage, config="--psm 10"))
+            """all_letters.append(pytesseract.image_to_string(
+                grayImage, config='--psm 10 -l osd '))"""
     print()
     if len(all_letters) != BOARD_SIZE ** 2:
         print("ERROR: COULDN'T FIND LETTERS")
@@ -146,14 +153,16 @@ while True:
             check_val.add(i[0])
     if OP_MODE:
         words_found.sort(key=lambda a: len(a[0]), reverse=True)
+    else:
+        rand.shuffle(words_found)
     print()
 
     # pyautogui.move(960, 540)
     # time.sleep(1)
     for word in words_found:
         random_pause_sec()
-        print(f"Inputing:  {word}")
-        # time.sleep(5)
+        print(f"Inputing:  {word[0]}")
+        word_count += 1
         first_down = True
         #print(datetime.now(), end_time)
         if datetime.now() >= end_time:
@@ -169,5 +178,6 @@ while True:
                 # pyautogui.mouseDown()
             pyautogui.mouseUp()
             # time.sleep(0.7)
-            time.sleep(0.12)
+            time.sleep(TIME_BETWEEN_WORDS_SEC)
         first_down = False
+    print(f"Words inputted: {word_count}")

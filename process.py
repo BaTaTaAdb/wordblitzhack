@@ -1,5 +1,6 @@
 import numpy as np
 import pickle as pkl
+import psutil
 
 
 def main():
@@ -13,6 +14,21 @@ def main():
     print(word_parsed[:15])
     print(next_free_elem)
     save_array(word_parsed)
+
+
+def checkIfProcessRunning(processName):
+    '''
+    Check if there is any running process that contains the given name processName.
+    '''
+    # Iterate over the all the running process
+    for proc in psutil.process_iter():
+        try:
+            # Check if process name contains the given name string.
+            if processName.lower() in proc.name().lower():
+                return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return False
 
 
 def word_processer(word):
